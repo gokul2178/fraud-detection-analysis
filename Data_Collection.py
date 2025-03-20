@@ -13,9 +13,7 @@ clientToken = os.getenv("CLIENT_TOKEN")
 redditUsername = os.getenv("REDDIT_USERNAME")
 accessToken = None
 
-
 #======================================================
-
 
 def generateToken():
     oAuthEndpoint = "https://www.reddit.com/api/v1/access_token"
@@ -41,6 +39,7 @@ def generateToken():
         sys.exit()
 
 
+#===========================
 
 
 def risingPosts(subreddit, numPosts, numComments):
@@ -59,14 +58,53 @@ def risingPosts(subreddit, numPosts, numComments):
 
         fileName = f"{subreddit}_RawData.json"
         data = response.json()
+
+
+        for post in data["data"]["children"]:
+            post_id = post["data"]["id"]
+            post["data"]["comments"] = getComments(post_id, numComments, numPosts)
+
+        print(Fore.GREEN + f"Fetched {numComments * numPosts} comments in total" + Style.RESET_ALL)
+        print("="*50 + "\n")
+
         savefile(data, fileName)
     
+        
 
     else:
         print(Fore.RED +f"Fetching posts from {subreddit} failed with status code: {response.status_code}" + Style.RESET_ALL)
         sys.exit()
 
 
+#===========================
+
+
+def getComments(post_id, numComments, numPosts):
+    commentEndpoint = f"https://oauth.reddit.com/comments/{post_id}"
+
+    headers = {"Authorization": f"Bearer {accessToken}", "User-Agent": f"dataCollector:v1 (by /u/{redditUsername})"}
+    params = {"limit": numComments}
+
+
+    response = requests.get(url = commentEndpoint, headers = headers, params = params)
+
+
+    if (response.status_code == 200):
+        commentData = response.json()
+
+        comments = []
+        for comment in commentData[1]["data"]["children"]:
+            if "body" in comment["data"]:  
+                comments.append(comment)
+    
+    else:
+        print(Fore.RED + f"Error occured while fetching comments with status code: {response.status_code}")
+        print("="*50 + "\n")
+        sys.exit()
+
+
+    return comments
+#===========================
 
 
 def savefile(data, fileName):
@@ -82,7 +120,8 @@ def savefile(data, fileName):
         json.dump(obj = data, fp =  file, indent = 3)
 
         print(Fore.GREEN + f"Sucessfully dumped data into {fileName}" + Style.RESET_ALL)
-        print("="*50 + "\n")
+        print("="*100 + "\n")
 
+        time.sleep(2)
 
-
+#===========================
