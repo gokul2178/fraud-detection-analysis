@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import requests
 import json 
 from dotenv import load_dotenv
@@ -31,8 +32,8 @@ def generateToken():
         responseJSON = response.json()
         accessToken = responseJSON.get("access_token")
 
-        print(Fore.GREEN +"Sucessfully obtained and saved access token" + Style.RESET_ALL)
-        print("="*50 + "\n")
+        print(Fore.GREEN +"Obtained and saved access token" + Style.RESET_ALL)
+        
 
     else:
         print(Fore.RED +f"oAuth failed with status code: {response.status_code}" + Style.RESET_ALL)
@@ -47,14 +48,14 @@ def risingPosts(subreddit, numPosts, numComments):
 
     headers = {"Authorization": f"Bearer {accessToken}", "User-Agent": f"dataCollector:v1 (by /u/{redditUsername})"}
     params = {"limit": numPosts}
-
+     
 
     response = requests.get(url = subredditEndpoint, headers = headers, params = params)
 
 
     if(response.status_code == 200):
-        print(Fore.GREEN +f"Sucessfully gathered {numPosts} threads from the subreddit r/{subreddit}" + Style.RESET_ALL)
-        print("="*50 + "\n")
+        print(Fore.GREEN +f"Gathered {numPosts} threads from the subreddit r/{subreddit}" + Style.RESET_ALL)
+        
 
         fileName = f"{subreddit}_RawData.json"
         data = response.json()
@@ -65,7 +66,7 @@ def risingPosts(subreddit, numPosts, numComments):
             post["data"]["comments"] = getComments(post_id, numComments, numPosts)
 
         print(Fore.GREEN + f"Fetched {numComments * numPosts} comments in total" + Style.RESET_ALL)
-        print("="*50 + "\n")
+        
 
         savefile(data, fileName)
     
@@ -104,14 +105,10 @@ def getComments(post_id, numComments, numPosts):
 
 
     return comments
+
 #===========================
 
-
 def savefile(data, fileName):
-
-    if not os.path.exists("Data"):
-        os.mkdir("Data")
-
     path = os.path.join("Data", fileName)
 
     time.sleep(1.5)
@@ -119,8 +116,8 @@ def savefile(data, fileName):
     with open(path, "w", encoding = "utf-8") as file:
         json.dump(obj = data, fp =  file, indent = 3)
 
-        print(Fore.GREEN + f"Sucessfully dumped data into {fileName}" + Style.RESET_ALL)
-        print("="*100 + "\n")
+        print(Fore.GREEN + f"Dumped data into {fileName}" + Style.RESET_ALL)
+        print("="*50 + "\n")
 
         time.sleep(2)
 
