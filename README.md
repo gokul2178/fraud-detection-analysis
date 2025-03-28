@@ -44,9 +44,13 @@ Power Automate is a Microsoft tool that enables the automation of workflows acro
 
 This project uses Power Automate to automatically run the script and refresh a Power BI dashboard with the latest fraud data processed from Reddit. 
 
-<img src="Other/powerAutomateFlow.png" alt="Icon">
+<img src="Other/powerAutomateFlow.png" alt="powerAutomate">
 
 <br>
+
+### Example Dashboard
+<img src="Other/Example.png" alt="Dashbord">
+
 
 ### Usage 
 --- 
