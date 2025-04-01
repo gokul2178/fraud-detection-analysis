@@ -20,6 +20,17 @@ pd.set_option('display.max_colwidth', None)
 dirPath = os.path.dirname(__file__)
 os.chdir(dirPath)
 
+
+keywords = ["identity theft", "fraud", "financial fraud", "money laundering", "wire fraud", 
+        "credit card", "bank fraud", "ssn" "phishing", "Ponzi", "pyramid scheme",
+        "scam", "counterfeit", "transactions", "fraud alert", 
+        "hacking", "hacked", "data breach", "malware", "phishing email", "bitcoin", "crypto", "impersonation", 
+        "bribery", "blackmail", "social engineering", "deception", "hoax", "cheat", "marketing"
+        "phishing website", "tech support", "employment fraud", "job offer", "job",
+        "fraudulent charges", "chargeback", "gift card", "password", "passcode", "insider fraud", 
+        "NFT", "fake check", "fake texts", "invest", "deposit", "fee", "lottery", "email", "pump and dump", 
+        "forex", "package", "donation", "warranty", "data", "misleading"]
+
 #======================================================
 
 def convertCSV():
@@ -43,7 +54,7 @@ def convertCSV():
 
             
             df = pd.json_normalize(data = dataJSON["data"]["children"])
-            df = df[["data.subreddit", "data.author", "data.title", "data.selftext", "data.ups", "data.comments"]]
+            df = df[["data.url", "data.subreddit", "data.author", "data.title", "data.selftext", "data.ups", "data.comments", "data.created_utc"]]
 
             df["data.comments"] = df["data.comments"].apply(lambda keys: [x["data"]["body"] for x in keys])
 
@@ -60,7 +71,7 @@ def convertCSV():
 
 
 def cleanData():
-    print(Fore.GREEN + "\nModifying Data.." + Style.RESET_ALL)
+    print(Fore.GREEN + "\nCleaning Data.." + Style.RESET_ALL)
     os.chdir(os.path.join(os.getcwd(), "Data"))
 
 
@@ -79,7 +90,7 @@ def cleanData():
 
 
     #Rename columns and create new column with all text information
-    df = df.rename(columns = {"data.subreddit":"Subreddit", "data.author":"Author", "data.title":"Title", "data.selftext":"Subheading", "data.ups":"Upvotes", "data.comments":"Comments"})
+    df = df.rename(columns = {"data.url":"Url", "data.subreddit":"Subreddit", "data.author":"Author", "data.title":"Title", "data.selftext":"Subheading", "data.ups":"Upvotes", "data.comments":"Comments", "data.created_utc":"timeUTC"})
     df["Content"] = df["Title"] + " " + df["Subheading"] + " " + df["Comments"]
 
     #Filter out to keep only text
@@ -100,12 +111,9 @@ def cleanData():
 
     df = df.rename(columns = {"Content":"cleanContent"})
 
-    
 
-    
     df = createRiskInfo(df)
-    print(Fore.GREEN + "Cleaned Data" + Style.RESET_ALL)
-
+    return df
 
 #===========================
 
@@ -113,25 +121,33 @@ def cleanData():
 def createRiskInfo(df):
 
     def wordDetector(row):
-        keywords = ["identity theft", "fraud", "financial fraud", "money laundering", "wire fraud", 
-        "credit card fraud", "bank fraud", "phishing", "Ponzi", "pyramid scheme",
-        "scam", "counterfeit", "fraudulent", "unauthorized transactions", "fraud alert", 
-        "hacking", "hacked", "data breach", "malware", "phishing email", "impersonation", 
-        "bribery", "blackmail", "social engineering", "deception", "hoax", "cheat",
-        "phishing website", "tech support", "employment fraud", "job offer", "job", 
-        "credit card", "fraudulent charges", "chargeback", "password", "passcode", "insider fraud", 
-        "NFT", "fake check", "invest", "deposit", "fee", "lottery", "email", "pump and dump", 
-        "forex", "package", "donation", "warranty", "data", "misleading", "deceptive marketing"]
-            
+        global keywords       
         foundKeywords = [word for word in keywords if word in row]
         wordList = ", ".join(foundKeywords)
         return wordList
 
+    #===========================
 
+    def threatScore(row):
+        global keywords
+
+        keywordScore = 1
+        for id, keyword in enumerate(keywords):
+            if keyword in row:
+                keywordScore += id
+        return keywordScore
+    
+    #===========================
 
     df["Keywords"] = df["cleanContent"].apply(wordDetector)
+    print(Fore.GREEN + "Created column: Keywords" + Style.RESET_ALL)
 
+    time.sleep(1)
 
+    df["threatScore"] = df["Keywords"].apply(threatScore)
+    print(Fore.GREEN + "Created column: threatScore" + Style.RESET_ALL)
 
-    #print(df["Keywords"])  
+    time.sleep(1)
+
+    return df
 
